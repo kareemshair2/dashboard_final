@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحليل رضا العملاء</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --secondary: #06b6d4;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --rose: #f43f5e;
+  --purple: #8b5cf6;
+  --amber: #d97706;
+
+  --bg-body: #f0f2f5;
+  --bg-card: rgba(255,255,255,0.85);
+  --bg-card-solid: #ffffff;
+  --bg-secondary: #f8f9fb;
+  --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --bg-gradient-soft: linear-gradient(135deg, #e0e7ff 0%, #f0e6ff 100%);
+
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+
+  --border: rgba(0,0,0,0.06);
+  --border-light: rgba(0,0,0,0.04);
+  --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+  --shadow-xl: 0 20px 60px rgba(0,0,0,0.1);
+  --shadow-glow: 0 0 20px rgba(99,102,241,0.15);
+
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] {
+  --bg-body: #080e1a;
+  --bg-card: rgba(13,20,40,0.88);
+  --bg-card-solid: #0d1428;
+  --bg-secondary: #0b1424;
+  --bg-gradient: linear-gradient(135deg, #1a1040 0%, #2d1b69 100%);
+  --bg-gradient-soft: linear-gradient(135deg, #0a0f1f 0%, #141033 100%);
+
+  --text-primary: #f0f4ff;
+  --text-secondary: #b8c8ff;
+  --text-tertiary: #7a8fbf;
+
+  --border: rgba(255,255,255,0.06);
+  --border-light: rgba(255,255,255,0.03);
+  --shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 35px rgba(0,0,0,0.6);
+  --shadow-xl: 0 20px 70px rgba(0,0,0,0.7);
+  --shadow-glow: 0 0 40px rgba(99,102,241,0.25);
+}
+
+[data-theme="dark"] .kpi-value {
+  -webkit-text-stroke: 0.5px rgba(255,255,255,0.08);
+  filter: drop-shadow(0 0 12px rgba(99,102,241,0.35));
+}
+
+[data-theme="dark"] .kpi {
+  border-color: rgba(99,102,241,0.1);
+}
+[data-theme="dark"] .kpi:hover {
+  border-color: rgba(99,102,241,0.3);
+  box-shadow: 0 0 30px rgba(99,102,241,0.12), var(--shadow-lg);
+}
+[data-theme="dark"] .kpi::after {
+  box-shadow: 0 0 12px rgba(99,102,241,0.5);
+}
+
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .chart-card-full,
+[data-theme="dark"] .insight-card {
+  border-color: rgba(99,102,241,0.08);
+}
+[data-theme="dark"] .chart-card:hover,
+[data-theme="dark"] .chart-card-full:hover,
+[data-theme="dark"] .insight-card:hover {
+  border-color: rgba(99,102,241,0.25);
+  box-shadow: 0 0 40px rgba(99,102,241,0.08), var(--shadow-lg);
+}
+
+[data-theme="dark"] .tab.active {
+  box-shadow: 0 0 25px rgba(99,102,241,0.35);
+}
+
+[data-theme="dark"] canvas {
+  filter: drop-shadow(0 0 6px rgba(99,102,241,0.08));
+}
+[data-theme="dark"] .chart-card:hover canvas {
+  filter: drop-shadow(0 0 14px rgba(99,102,241,0.15));
+  transition: filter 0.4s ease;
+}
+
+[data-theme="dark"] .kpi-value[style*="color:"] {
+  text-shadow: 0 0 20px currentColor;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  direction: rtl;
+  font-family: var(--font);
+  background: var(--bg-body);
+  color: var(--text-primary);
+  transition: var(--transition-slow);
+  overflow-x: hidden;
+}
+
+.wrap { max-width: 1280px; margin: 0 auto; padding: 1rem; }
+
+/* ===== HEADER ===== */
+.header {
+  background: var(--bg-gradient);
+  border-radius: var(--radius-xl);
+  padding: 2rem 2rem 1.5rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-xl);
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 60%),
+              radial-gradient(circle at 70% 80%, rgba(255,255,255,0.08) 0%, transparent 50%);
+  animation: headerShimmer 8s ease-in-out infinite alternate;
+}
+@keyframes headerShimmer {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(-5%, -5%) rotate(3deg); }
+}
+.header-content { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.header-title { color: #fff; font-size: 1.5rem; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.15); }
+.header-subtitle { color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+
+.theme-toggle {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50px;
+  padding: 8px 16px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: var(--transition);
+}
+.theme-toggle:hover {
+  background: rgba(255,255,255,0.25);
+  transform: scale(1.05);
+}
+
+/* ===== SECTION TITLES ===== */
+.section-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-title::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* ===== KPI ===== */
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.kpi {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.6s ease both;
+}
+.kpi::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3px;
+  height: 100%;
+  border-radius: 0 2px 2px 0;
+  background: var(--primary);
+  opacity: 0;
+  transition: var(--transition);
+}
+.kpi:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+.kpi:hover::after { opacity: 1; }
+.kpi-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; font-weight: 500; }
+.kpi-value { font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height: 1.2; background: var(--bg-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.kpi-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 4px; }
+
+.kpi:nth-child(1) { animation-delay: 0.05s; }
+.kpi:nth-child(2) { animation-delay: 0.1s; }
+.kpi:nth-child(3) { animation-delay: 0.15s; }
+.kpi:nth-child(4) { animation-delay: 0.2s; }
+.kpi:nth-child(5) { animation-delay: 0.25s; }
+.kpi:nth-child(6) { animation-delay: 0.3s; }
+
+/* ===== TABS ===== */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 1.25rem;
+  padding: 4px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tab {
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: calc(var(--radius) - 4px);
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  background: transparent;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: var(--transition);
+  position: relative;
+}
+.tab:hover { color: var(--text-primary); background: var(--bg-secondary); }
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: var(--shadow-glow);
+}
+.tab-panel { display: none; animation: fadeIn 0.4s ease; }
+.tab-panel.active { display: block; }
+
+/* ===== CARDS ===== */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; }
+.chart-card, .chart-card-full {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.chart-card:hover, .chart-card-full:hover { box-shadow: var(--shadow-lg); border-color: transparent; }
+.chart-card-full { margin-bottom: 1rem; }
+.chart-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 12px; color: var(--text-secondary); }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+/* ===== INSIGHT GRID ===== */
+.insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+.insight-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+  position: relative;
+}
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+.insight-icon { font-size: 1.25rem; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; background: var(--bg-secondary); }
+.insight-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+.insight-text { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ===== BAR ITEMS ===== */
+.bar-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; }
+.bar-label { color: var(--text-secondary); min-width: 70px; text-align: right; font-weight: 500; }
+.bar-track { flex: 1; height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+
+/* ===== TABLE ===== */
+.rec-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+.rec-table th { text-align: right; padding: 8px 10px; color: var(--text-tertiary); font-weight: 600; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; }
+.rec-table td { padding: 10px 10px; border-bottom: 1px solid var(--border-light); color: var(--text-primary); vertical-align: top; line-height: 1.4; }
+.rec-table tr:last-child td { border-bottom: none; }
+.rec-table tbody tr { transition: var(--transition); }
+.rec-table tbody tr:hover { background: var(--bg-secondary); }
+
+/* ===== BADGES ===== */
+.badge { font-size: 10px; padding: 3px 10px; border-radius: 50px; display: inline-block; font-weight: 600; letter-spacing: 0.02em; }
+.badge-high { background: rgba(239,68,68,0.12); color: var(--danger); }
+.badge-med { background: rgba(245,158,11,0.12); color: var(--amber); }
+.badge-low { background: rgba(16,185,129,0.12); color: var(--success); }
+
+/* ===== ACCENT BORDERS ===== */
+[style*="border-right:3px solid #1D9E75"] { border-right: 3px solid var(--success) !important; }
+[style*="border-right:3px solid #888780"] { border-right: 3px solid var(--text-tertiary) !important; }
+[style*="border-right:3px solid #E24B4A"] { border-right: 3px solid var(--danger) !important; }
+[style*="border-right:3px solid #7F77DD"] { border-right: 3px solid var(--purple) !important; }
+[style*="border-top:2px solid #7F77DD"] { border-top: 2px solid var(--purple) !important; }
+
+/* ===== FUNNEL ===== */
+#funnelViz > div { animation: scaleIn 0.5s ease both; position: relative; overflow: hidden; }
+#funnelViz > div:nth-child(1) { animation-delay: 0.05s; }
+#funnelViz > div:nth-child(3) { animation-delay: 0.15s; }
+#funnelViz > div:nth-child(5) { animation-delay: 0.25s; }
+#funnelViz > div:nth-child(7) { animation-delay: 0.35s; }
+#funnelViz > div:nth-child(9) { animation-delay: 0.45s; }
+
+/* ===== KEYFRAMES ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== REVEAL ON SCROLL ===== */
+.reveal { opacity: 0; transform: translateY(24px); transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+  .charts-row, .insight-grid { grid-template-columns: 1fr; }
+  .header { padding: 1.25rem; }
+  .header-title { font-size: 1.15rem; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .tabs { gap: 2px; }
+  .tab { padding: 6px 10px; font-size: 11px; }
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-tertiary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-content">
+    <div>
+      <h1 class="header-title">لوحة تحليل رضا العملاء</h1>
+      <div class="header-subtitle">
+        <span>10,121 مشاركًا</span>
+        <span>•</span>
+        <span>متوسط التقييم 3.99 / 5</span>
+      </div>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn">🌙</button>
+  </div>
+</header>
+
+<!-- KPI -->
+<div class="kpi-grid">
+  <div class="kpi">
+    <div class="kpi-label">إجمالي المشاركين</div>
+    <div class="kpi-value" data-target="10121">0</div>
+    <div class="kpi-sub">من 11,454 سجل إجمالي</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">متوسط التقييم</div>
+    <div class="kpi-value">3.99 / 5</div>
+    <div class="kpi-sub">تقييم مرتفع عمومًا</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">نسبة الرضا</div>
+    <div class="kpi-value">73.9%</div>
+    <div class="kpi-sub">تقييم 4 أو 5</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">نية إعادة الشراء</div>
+    <div class="kpi-value">69.6%</div>
+    <div class="kpi-sub">7,047 عميل</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">التوصية بالمنتج</div>
+    <div class="kpi-value">52.9%</div>
+    <div class="kpi-sub">5,350 بالتأكيد</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">نسبة المشكلات</div>
+    <div class="kpi-value">19.9%</div>
+    <div class="kpi-sub">2,016 عميل</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" data-tab="overview">نظرة عامة</button>
+  <button class="tab" data-tab="customers">ملف العملاء</button>
+  <button class="tab" data-tab="usage">الاستخدام</button>
+  <button class="tab" data-tab="insights">رؤى وتوصيات</button>
+  <button class="tab" data-tab="correlations">الارتباطات</button>
+  <button class="tab" data-tab="segments">شرائح العملاء</button>
+  <button class="tab" data-tab="textanalysis">تحليل النصوص</button>
+  <button class="tab" data-tab="predictions">التنبؤات</button>
+  <button class="tab" data-tab="executive">تقرير تنفيذي</button>
+</div>
+
+<!-- TAB: OVERVIEW -->
+<div id="tab-overview" class="tab-panel active">
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">توزيع التقييمات</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#6366f1"></span>التوزيع</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="ratingChart" role="img" aria-label="توزيع التقييمات من 1 إلى 5">1:214, 2:222, 3:2146, 4:4305, 5:3113</canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">نية إعادة الشراء</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>نعم 69.6%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>غير متأكد 23.6%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>لا 6.8%</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="repurchaseChart" role="img" aria-label="نية إعادة الشراء">نعم:7047, غير متأكد:2390, لا:684</canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">التوصية بالمنتج</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#6366f1"></span>بالتأكيد 52.9%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>ربما 43.5%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>لا 3.7%</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="recommendChart" role="img" aria-label="نسبة التوصية بالمنتج">بالتأكيد:5350, ربما:4401, لا:370</canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">أكثر ما أعجب العملاء</div>
+      <div style="margin-top:4px">
+        <div class="bar-item"><span class="bar-label">سهولة الاستخدام</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div><span class="bar-val">6,141</span></div>
+        <div class="bar-item"><span class="bar-label">السعر</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#10b981"></div></div><span class="bar-val">5,399</span></div>
+        <div class="bar-item"><span class="bar-label">التصميم</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div><span class="bar-val">2,841</span></div>
+        <div class="bar-item"><span class="bar-label">التغليف</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">2,069</span></div>
+        <div class="bar-item"><span class="bar-label">الحجم</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f43f5e"></div></div><span class="bar-val">1,957</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: CUSTOMERS -->
+<div id="tab-customers" class="tab-panel">
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">توزيع الجنس</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#6366f1"></span>رجل 52.0%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#f43f5e"></span>سيدة 48.0%</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="genderChart" role="img" aria-label="توزيع الجنس">رجل:5267, سيدة:4854</canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">التقييم حسب الفئة العمرية</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>متوسط التقييم</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="ageChart" role="img" aria-label="متوسط التقييم حسب الفئة العمرية">18-25:4.00, 26-35:3.98, 36-45:3.99, 46-55:3.94, 55+:3.87</canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card-full reveal">
+    <div class="chart-title">أعلى المدن مشاركةً ومتوسط التقييم</div>
+    <div style="position:relative;height:260px"><canvas id="cityChart" role="img" aria-label="المدن حسب المشاركة والتقييم">القاهرة:3219, الجيزة:1037, الاسكندرية:444, المنصورة:174, الفيوم:160, اسيوط:155, طنطا:155, المنيا:134, الزقازيق:128</canvas></div>
+  </div>
+
+  <div class="charts-row" style="margin-top:1rem">
+    <div class="chart-card reveal">
+      <div class="chart-title">أكثر مدينة رضا (متوسط)</div>
+      <div style="margin-top:8px">
+        <div class="bar-item"><span class="bar-label">المنيا</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#10b981"></div></div><span class="bar-val">4.10</span></div>
+        <div class="bar-item"><span class="bar-label">المنصورة</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#10b981"></div></div><span class="bar-val">4.07</span></div>
+        <div class="bar-item"><span class="bar-label">طنطا</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#10b981"></div></div><span class="bar-val">4.05</span></div>
+        <div class="bar-item"><span class="bar-label">الجيزة</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div><span class="bar-val">4.05</span></div>
+        <div class="bar-item"><span class="bar-label">الفيوم</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div><span class="bar-val">4.02</span></div>
+      </div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">أقل مدينة رضا (متوسط)</div>
+      <div style="margin-top:8px">
+        <div class="bar-item"><span class="bar-label">Mansoura</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#ef4444"></div></div><span class="bar-val">3.58</span></div>
+        <div class="bar-item"><span class="bar-label">اسكندرية</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#ef4444"></div></div><span class="bar-val">3.64</span></div>
+        <div class="bar-item"><span class="bar-label">المنوفية</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">3.65</span></div>
+        <div class="bar-item"><span class="bar-label">Tanta</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">3.82</span></div>
+        <div class="bar-item"><span class="bar-label">الشرقية</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">3.85</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: USAGE -->
+<div id="tab-usage" class="tab-panel">
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">تكرار الاستخدام</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#6366f1"></span>أسبوعيًا 59.6%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>شهريًا 23.5%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#8b5cf6"></span>يوميًا 22.0%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#94a3b8"></span>نادرًا 7.2%</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="freqChart" role="img" aria-label="تكرار استخدام المنتج">أسبوعيًا:6031, شهريًا:2373, يوميًا:2224, نادرًا:729</canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">مدة استخدام المنتج</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>1-6 شهور 54.6%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>أقل من شهر 38.6%</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>أكثر من سنة 20.1%</span>
+      </div>
+      <div style="position:relative;height:180px"><canvas id="durationChart" role="img" aria-label="مدة استخدام المنتج">شهور 1-6:5522, أقل من شهر:3902, أكثر من سنة:2030</canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card-full reveal">
+    <div class="chart-title">متوسط التقييم حسب تكرار الاستخدام ومدته</div>
+    <div style="position:relative;height:220px"><canvas id="usageRatingChart" role="img" aria-label="متوسط التقييم حسب نمط الاستخدام">يومي:4.35, أسبوعي:4.01, شهري:3.85, نادرًا:3.13 / أكثر من سنة:4.06, 1-6 شهور:4.00, أقل من شهر:3.93</canvas></div>
+  </div>
+</div>
+
+<!-- TAB: INSIGHTS -->
+<div id="tab-insights" class="tab-panel">
+  <div class="section-title reveal">رؤى خفية</div>
+  <div class="insight-grid" style="margin-bottom:1.5rem">
+    <div class="insight-card reveal">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-title">فجوة التوصية</div>
+      <div class="insight-text">73.9% راضون (تقييم ≥4) لكن فقط 52.9% يوصون بالمنتج بشكل قاطع — فجوة 21% تعني أن الرضا لا يُترجم تلقائيًا إلى ترويج شفهي</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">🔄</div>
+      <div class="insight-title">المشكلات لا تمنع الشراء</div>
+      <div class="insight-text">44.7% ممن واجهوا مشكلات ما زالوا ينوون إعادة الشراء، مما يشير إلى قوة المنتج الأساسية رغم وجود نقاط ضعف تشغيلية</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">📈</div>
+      <div class="insight-title">الاستخدام اليومي = أعلى رضا</div>
+      <div class="insight-text">مستخدمو المنتج يوميًا يُعطون متوسط 4.35 مقارنة بـ 3.13 للمستخدمين النادرين — الاستخدام المتكرر يبني رضا أعمق</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">📍</div>
+      <div class="insight-title">تفاوت جغرافي</div>
+      <div class="insight-text">المنيا وطنطا والمنصورة تتصدر الرضا (4.07-4.10) بينما تعاني بعض مناطق الإسكندرية من تقييمات أدنى (3.58-3.64)</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">⏰</div>
+      <div class="insight-title">العملاء القدامى أكثر رضا</div>
+      <div class="insight-text">مستخدمو أكثر من سنة: متوسط 4.06 مقابل 3.93 للمستخدمين الجدد — الولاء يتعمق مع الوقت</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">😢</div>
+      <div class="insight-title">تأثير المشكلات على التقييم</div>
+      <div class="insight-text">وجود مشكلة يخفض متوسط التقييم من 4.10 إلى 3.53 — انخفاض 0.57 نقطة أي ما يعادل 14% تراجعًا في الرضا</div>
+    </div>
+  </div>
+
+  <div class="section-title reveal">أبرز الاقتراحات المتكررة</div>
+  <div class="chart-card-full reveal" style="margin-bottom:1.5rem">
+    <div style="margin-top:4px">
+      <div class="bar-item"><span class="bar-label" style="min-width:120px">تقليل السعر</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#ef4444"></div></div><span class="bar-val">الأكثر</span></div>
+      <div class="bar-item"><span class="bar-label" style="min-width:120px">عروض وتخفيضات</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">مرتفع</span></div>
+      <div class="bar-item"><span class="bar-label" style="min-width:120px">تحسين التغليف</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">متوسط</span></div>
+      <div class="bar-item"><span class="bar-label" style="min-width:120px">سرعة التوصيل</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div><span class="bar-val">متوسط</span></div>
+      <div class="bar-item"><span class="bar-label" style="min-width:120px">خدمة ما بعد البيع</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div><span class="bar-val">منخفض</span></div>
+    </div>
+  </div>
+
+  <div class="section-title reveal">جدول التوصيات حسب الأولوية</div>
+  <div class="chart-card-full reveal">
+    <table class="rec-table">
+      <thead>
+        <tr>
+          <th>الأولوية</th>
+          <th>المشكلة</th>
+          <th>التوصية</th>
+          <th>الفائدة المتوقعة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-high">عاجل</span></td>
+          <td>فجوة التوصية (21%)</td>
+          <td>تصميم برنامج ولاء وإحالة مع حوافز واضحة</td>
+          <td>رفع NPS ونمو قاعدة العملاء</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-high">عاجل</span></td>
+          <td>شكاوى السعر (الاقتراح الأكثر)</td>
+          <td>إطلاق عروض كمية وباقات موسمية</td>
+          <td>تحسين إعادة الشراء وخفض الحساسية السعرية</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-med">متوسط</span></td>
+          <td>معدل المشكلات 19.9%</td>
+          <td>تحسين جودة التغليف وعمليات التوصيل</td>
+          <td>رفع التقييم من 3.53 إلى أعلى لمن واجهوا مشكلات</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-med">متوسط</span></td>
+          <td>تدني الرضا في الإسكندرية</td>
+          <td>تقييم سلسلة التوزيع والتوصيل في هذه المنطقة</td>
+          <td>رفع رضا 444+ عميل في منطقة سكانية كبيرة</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-med">متوسط</span></td>
+          <td>المستخدمون النادرون (تقييم 3.13)</td>
+          <td>حملات تنشيط بمحتوى تعليمي وعروض تجريبية</td>
+          <td>تحويل المستخدمين النادرين إلى أسبوعيين</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-low">منخفض</span></td>
+          <td>خدمة ما بعد البيع</td>
+          <td>تطوير قناة دعم واضحة وسريعة الاستجابة</td>
+          <td>تعزيز الثقة ورفع معدل التوصية</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB: CORRELATIONS -->
+<div id="tab-correlations" class="tab-panel">
+  <div class="section-title reveal">مصفوفة الارتباط مع التقييم (Spearman)</div>
+  <div class="chart-card-full reveal" style="margin-bottom:1rem">
+    <div class="chart-title">قوة العلاقة بين المتغيرات والتقييم العام</div>
+    <div style="position:relative;height:240px"><canvas id="corrBarChart"></canvas></div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">تفسير معاملات الارتباط</div>
+      <div style="margin-top:8px">
+        <table class="rec-table">
+          <thead><tr><th>المتغير</th><th>معامل r</th><th>القوة</th><th>الدلالة</th></tr></thead>
+          <tbody>
+            <tr><td>التوصية بالمنتج</td><td style="color:var(--success);font-weight:600">+0.405</td><td><span class="badge badge-high">قوي</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>نية إعادة الشراء</td><td style="color:var(--success);font-weight:600">+0.326</td><td><span class="badge badge-high">متوسط-قوي</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>تكرار الاستخدام</td><td style="color:var(--success);font-weight:600">+0.266</td><td><span class="badge badge-med">متوسط</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>المشكلات</td><td style="color:var(--danger);font-weight:600">−0.231</td><td><span class="badge badge-high">متوسط سالب</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>مدة الاستخدام</td><td style="color:var(--success);font-weight:600">+0.042</td><td><span class="badge badge-low">ضعيف</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>العمر</td><td style="color:var(--danger);font-weight:600">−0.022</td><td><span class="badge badge-low">ضعيف جداً</span></td><td>دالة إحصائيًا ✓</td></tr>
+            <tr><td>الجنس</td><td style="color:var(--text-tertiary)">+0.004</td><td><span class="badge badge-low">لا يوجد</span></td><td>غير دالة ✗</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">متوسط التقييم حسب وجود مشكلات</div>
+      <div style="position:relative;height:180px"><canvas id="problemRatingChart"></canvas></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary)">
+        وجود مشكلة يخفض التقييم بمعدل <strong style="color:var(--danger)">0.57 نقطة</strong> — انخفاض 14%
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">متوسط التقييم حسب المدينة (أعلى 12 مدينة)</div>
+  <div class="chart-card-full reveal">
+    <div style="position:relative;height:200px"><canvas id="cityRatingCorr"></canvas></div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">الرؤى الرئيسية من تحليل الارتباطات</div>
+  <div class="insight-grid">
+    <div class="insight-card reveal">
+      <div class="insight-icon">🔗</div>
+      <div class="insight-title">التوصية هي أقوى مؤشر للرضا</div>
+      <div class="insight-text">ارتباط 0.405 — العميل الراضي يوصي بالمنتج بشكل تلقائي، مما يجعل رفع رضا العملاء أداة تسويق مباشرة</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">⚡</div>
+      <div class="insight-title">الجنس لا يؤثر على التقييم</div>
+      <div class="insight-text">ارتباط 0.004 غير دال — المنتج محايد جنسيًا في الرضا، ما يعني نجاح استراتيجية التسويق الشاملة دون تخصيص جندري</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">📈</div>
+      <div class="insight-title">الاستخدام المتكرر يبني الرضا</div>
+      <div class="insight-text">ارتباط 0.266 — كلما زادت وتيرة الاستخدام ارتفع التقييم، يدل على أن المنتج يكشف جودته مع التكرار</div>
+    </div>
+    <div class="insight-card reveal">
+      <div class="insight-icon">🚨</div>
+      <div class="insight-title">المشكلات أقوى مدمر للرضا</div>
+      <div class="insight-text">ارتباط سالب −0.231 مع التقييم — حل المشكلات التقنية والتشغيلية سيرفع الرضا العام بشكل ملموس ومقاس</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: SEGMENTS -->
+<div id="tab-segments" class="tab-panel">
+  <div class="section-title reveal">شرائح العملاء (Customer Segmentation)</div>
+
+  <div class="charts-row reveal" style="margin-bottom:1rem">
+    <div class="chart-card">
+      <div class="chart-title">توزيع الشرائح</div>
+      <div style="position:relative;height:220px"><canvas id="segmentPieChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">حجم كل شريحة ونسبتها</div>
+      <div style="margin-top:8px">
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Loyal</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#10b981"></div></div><span class="bar-val">3,873 — 35.5%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Neutral</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#94a3b8"></div></div><span class="bar-val">3,256 — 29.9%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Champions</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#6366f1"></div></div><span class="bar-val">2,428 — 22.3%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Dissatisfied</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#ef4444"></div></div><span class="bar-val">470 — 4.3%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">At Risk</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f59e0b"></div></div><span class="bar-val">450 — 4.1%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Promoters</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#8b5cf6"></div></div><span class="bar-val">341 — 3.1%</span></div>
+        <div class="bar-item"><span class="bar-label" style="min-width:100px">Detractors</span><div class="bar-track"><div class="bar-fill" style="width:0%;background:#f43f5e"></div></div><span class="bar-val">83 — 0.8%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title reveal">تفصيل كل شريحة واستراتيجية التعامل</div>
+  <div class="chart-card-full reveal">
+    <table class="rec-table">
+      <thead>
+        <tr><th>الشريحة</th><th>الوصف</th><th>الحجم</th><th>الاستراتيجية المقترحة</th><th>الأولوية</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span style="color:#6366f1;font-weight:600">🏆 Champions</span></td><td>تقييم ≥4.5 + ينوون الشراء + يوصون بقوة</td><td>2,428 (22.3%)</td><td>برنامج سفراء العلامة — منحهم محتوى حصري وعمولات للإحالة</td><td><span class="badge badge-low">نمو</span></td></tr>
+        <tr><td><span style="color:#10b981;font-weight:600">💚 Loyal</span></td><td>تقييم ≥4 + ينوون الشراء</td><td>3,873 (35.5%)</td><td>ترقيتهم لـ Champions عبر تجارب مميزة وعروض ولاء حصرية</td><td><span class="badge badge-low">رفع</span></td></tr>
+        <tr><td><span style="color:#94a3b8;font-weight:600">😐 Neutral</span></td><td>تقييم 3-4 بدون موقف واضح</td><td>3,256 (29.9%)</td><td>تحديد نقاط الاحتكاك وإزالتها — حملات تفاعل هادفة</td><td><span class="badge badge-med">تحويل</span></td></tr>
+        <tr><td><span style="color:#f59e0b;font-weight:600">⚠️ At Risk</span></td><td>تقييم ≥3 لكن لا ينوون الشراء</td><td>450 (4.1%)</td><td>استطلاع سريع + عروض استرداد شخصية قبل خسارتهم</td><td><span class="badge badge-high">عاجل</span></td></tr>
+        <tr><td><span style="color:#ef4444;font-weight:600">😞 Dissatisfied</span></td><td>تقييم ≤2</td><td>470 (4.3%)</td><td>تواصل مباشر فوري — فهم المشكلة وتعويضهم</td><td><span class="badge badge-high">عاجل</span></td></tr>
+        <tr><td><span style="color:#8b5cf6;font-weight:600">📢 Promoters</span></td><td>راضون ويوصون لكن غير متأكدين من الشراء</td><td>341 (3.1%)</td><td>فهم سبب التردد في إعادة الشراء — قد تكون مشكلة سعر</td><td><span class="badge badge-med">بحث</span></td></tr>
+        <tr><td><span style="color:#f43f5e;font-weight:600">👎 Detractors</span></td><td>لا يوصون بالمنتج</td><td>83 (0.8%)</td><td>إدارة سمعة فورية — تعامل شخصي وحل مضمون</td><td><span class="badge badge-high">عاجل</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">Funnel Analysis — رحلة ولاء العميل</div>
+  <div class="chart-card-full reveal">
+    <div style="padding:1rem 0">
+      <div id="funnelViz" style="display:flex;flex-direction:column;align-items:center;gap:6px">
+        <div style="background:#6366f1;color:#fff;border-radius:8px;padding:12px 20px;width:100%;text-align:center;font-size:13px;font-weight:500">إجمالي العملاء: 10,901 (100%)</div>
+        <div style="color:var(--text-tertiary);font-size:11px">▼ 74.0%</div>
+        <div style="background:#10b981;color:#fff;border-radius:8px;padding:12px 20px;width:88%;text-align:center;font-size:13px;font-weight:500">العملاء الراضون (تقييم ≥4): 8,062 (74.0%)</div>
+        <div style="color:var(--text-tertiary);font-size:11px">▼ 53.0%</div>
+        <div style="background:#8b5cf6;color:#fff;border-radius:8px;padding:12px 20px;width:72%;text-align:center;font-size:13px;font-weight:500">الموصون بالمنتج (بالتأكيد): 5,778 (53.0%)</div>
+        <div style="color:var(--text-tertiary);font-size:11px">▼ 69.7%</div>
+        <div style="background:#f59e0b;color:#fff;border-radius:8px;padding:12px 20px;width:60%;text-align:center;font-size:13px;font-weight:500">الراغبون في إعادة الشراء: 7,602 (69.7%)</div>
+        <div style="color:var(--text-tertiary);font-size:11px">▼ 49.1%</div>
+        <div style="background:#f43f5e;color:#fff;border-radius:8px;padding:12px 20px;width:44%;text-align:center;font-size:13px;font-weight:500">العملاء الأكثر ولاءً (يشترون + يوصون): 5,351 (49.1%)</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);line-height:1.6">
+      <strong>تحليل قمع الولاء:</strong> من كل 100 عميل، 74 راضٍ، لكن فقط 49 يُشكّلون القاعدة الصلبة من الولاء. الفجوة بين الرضا (74%) والولاء (49%) تمثل <strong style="color:var(--warning)">25% فرصة تحسين</strong>.
+    </div>
+  </div>
+</div>
+
+<!-- TAB: TEXT ANALYSIS -->
+<div id="tab-textanalysis" class="tab-panel">
+  <div class="section-title reveal">تحليل النصوص والمشاعر</div>
+
+  <div class="kpi-grid reveal" style="margin-bottom:1rem">
+    <div class="kpi" style="border-right:3px solid #10b981">
+      <div class="kpi-label">إيجابي (4-5)</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#10b981;background:#10b981;-webkit-background-clip:unset;background-clip:unset;color:#10b981">74.0%</div>
+      <div class="kpi-sub">8,062 عميل</div>
+    </div>
+    <div class="kpi" style="border-right:3px solid #94a3b8">
+      <div class="kpi-label">محايد (3)</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#94a3b8;background:#94a3b8;-webkit-background-clip:unset;background-clip:unset;color:#94a3b8">21.2%</div>
+      <div class="kpi-sub">2,311 عميل</div>
+    </div>
+    <div class="kpi" style="border-right:3px solid #ef4444">
+      <div class="kpi-label">سلبي (1-2)</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#ef4444;background:#ef4444;-webkit-background-clip:unset;background-clip:unset;color:#ef4444">4.3%</div>
+      <div class="kpi-sub">470 عميل</div>
+    </div>
+    <div class="kpi" style="border-right:3px solid #8b5cf6">
+      <div class="kpi-label">مؤشر NPS المقدر</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#8b5cf6;background:#8b5cf6;-webkit-background-clip:unset;background-clip:unset;color:#8b5cf6">+49</div>
+      <div class="kpi-sub">ممتاز (53% - 4.3%)</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">أكثر ما أعجب العملاء (ذكر المميزة)</div>
+      <div style="position:relative;height:200px"><canvas id="likedFeaturesChart"></canvas></div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">تصنيفات الاقتراحات</div>
+      <div style="position:relative;height:200px"><canvas id="suggCategoriesChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">Positive Topics — المواضيع الإيجابية</div>
+  <div class="insight-grid">
+    <div class="insight-card reveal" style="border-right:3px solid #10b981">
+      <div class="insight-icon">✅</div>
+      <div class="insight-title">سهولة الاستخدام (6,141 ذكر)</div>
+      <div class="insight-text">أكثر ما يُقدّره العملاء — المنتج بديهي ولا يحتاج تعليمات. يشير إلى نضج تصميمي واضح وتجربة مستخدم متقنة</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #10b981">
+      <div class="insight-icon">💰</div>
+      <div class="insight-title">السعر المناسب (5,399 ذكر)</div>
+      <div class="insight-text">القيمة مقابل المال مُرضية لأغلبية العملاء — دليل على تسعير تنافسي رغم وجود شريحة تطلب مزيدًا من التخفيضات</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #10b981">
+      <div class="insight-icon">🎨</div>
+      <div class="insight-title">التصميم الجمالي (2,841 ذكر)</div>
+      <div class="insight-text">الشكل الخارجي يضيف قيمة مدركة — عامل تفاضلي مهم خاصة في سوق تنافسي يتشابه فيه المنتجات وظيفيًا</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #10b981">
+      <div class="insight-icon">📦</div>
+      <div class="insight-title">التغليف والحجم (2,069 + 1,957)</div>
+      <div class="insight-text">العناصر المادية المحيطة بالمنتج تُقدَّر — تحسينات التغليف ليست تكلفة بل استثمار في الإدراك الإيجابي</div>
+    </div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">Negative Topics & Emerging Themes</div>
+  <div class="insight-grid">
+    <div class="insight-card reveal" style="border-right:3px solid #ef4444">
+      <div class="insight-icon">❌</div>
+      <div class="insight-title">الحساسية السعرية (287 اقتراح)</div>
+      <div class="insight-text">رغم رضا الأغلبية، شريحة ذات دخل محدود تجد السعر عائقًا — فرصة لإطلاق حزمة اقتصادية دون المساس بالعلامة</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #ef4444">
+      <div class="insight-icon">🔧</div>
+      <div class="insight-title">جودة المنتج (267 اقتراح)</div>
+      <div class="insight-text">شكاوى نوعية تتعلق بالمتانة أو الاتساق — يستوجب تحليل دفعات الإنتاج لتحديد مصدر التباين في الجودة</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #f59e0b">
+      <div class="insight-icon">🌱</div>
+      <div class="insight-title">الموضوع الناشئ: التغليف البيئي</div>
+      <div class="insight-text">إشارات متزايدة لتفضيل عبوات صديقة للبيئة — اتجاه عالمي يمكن استباقه بمبادرة تغليف مستدام ترفع صورة العلامة</div>
+    </div>
+    <div class="insight-card reveal" style="border-right:3px solid #f59e0b">
+      <div class="insight-icon">🚀</div>
+      <div class="insight-title">الموضوع الناشئ: التوصيل السريع</div>
+      <div class="insight-text">85 إشارة لسرعة التوصيل — مع نمو التجارة الإلكترونية، تحسين آليات الشحن سيصبح عاملاً تنافسياً حاسماً</div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB: PREDICTIONS -->
+<div id="tab-predictions" class="tab-panel">
+  <div class="section-title reveal">نماذج التنبؤ (Logistic Regression)</div>
+
+  <div class="kpi-grid reveal" style="margin-bottom:1.5rem">
+    <div class="kpi" style="border-right:3px solid #10b981">
+      <div class="kpi-label">دقة نموذج إعادة الشراء</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#10b981;background:#10b981;-webkit-background-clip:unset;background-clip:unset;color:#10b981">75.1%</div>
+      <div class="kpi-sub">جيد جداً للبيانات الاستطلاعية</div>
+    </div>
+    <div class="kpi" style="border-right:3px solid #6366f1">
+      <div class="kpi-label">دقة نموذج التوصية</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#6366f1;background:#6366f1;-webkit-background-clip:unset;background-clip:unset;color:#6366f1">68.7%</div>
+      <div class="kpi-sub">معقول مع بيانات تعبيرية</div>
+    </div>
+    <div class="kpi" style="border-right:3px solid #ef4444">
+      <div class="kpi-label">دقة نموذج انخفاض الرضا</div>
+      <div class="kpi-value" style="-webkit-text-fill-color:#ef4444;background:#ef4444;-webkit-background-clip:unset;background-clip:unset;color:#ef4444">95.7%</div>
+      <div class="kpi-sub">ممتاز لاكتشاف المخاطر</div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card reveal">
+      <div class="chart-title">أهم العوامل: احتمالية إعادة الشراء</div>
+      <div style="position:relative;height:200px"><canvas id="predRepurchaseChart"></canvas></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary)">
+        <strong>التفسير:</strong> وجود مشكلة (−1.07) هو الأقوى سلبًا، فيما التقييم العالي (+0.64) أقوى محرك إيجابي
+      </div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">أهم العوامل: احتمالية التوصية</div>
+      <div style="position:relative;height:200px"><canvas id="predRecommendChart"></canvas></div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary)">
+        <strong>التفسير:</strong> التقييم (+0.83) أقوى عامل — العميل الراضي هو الأكثر ميلاً للتوصية
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-card-full reveal" style="margin-top:1rem">
+    <div class="chart-title">أهم العوامل: انخفاض الرضا (Early Warning)</div>
+    <div style="position:relative;height:180px"><canvas id="predLowSatChart"></canvas></div>
+    <div style="margin-top:12px;font-size:12px;color:var(--text-secondary);line-height:1.6">
+      <strong>نظام الإنذار المبكر:</strong> العميل الذي يستخدم المنتج نادرًا (−0.86) ويواجه مشكلة (+1.43) ومدة استخدامه قصيرة (−0.40) هو الأعلى خطرًا لانخفاض الرضا. استهدافه بتدخل استباقي يمنع فقدانه.
+    </div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">سيناريوهات التنبؤ</div>
+  <div class="chart-card-full reveal">
+    <table class="rec-table">
+      <thead>
+        <tr><th>الملف الوظيفي</th><th>احتمالية إعادة الشراء</th><th>احتمالية التوصية</th><th>مخاطر انخفاض الرضا</th><th>التوصية</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>تقييم 5 + يومي + أكثر من سنة + بلا مشكلات</td><td style="color:var(--success);font-weight:600">↑ عالية جداً</td><td style="color:var(--success);font-weight:600">↑ عالية جداً</td><td style="color:var(--success)">↓ منخفضة جداً</td><td>برنامج Champion — سفير العلامة</td></tr>
+        <tr><td>تقييم 3 + أسبوعي + أقل من شهر + بلا مشكلات</td><td style="color:var(--warning);font-weight:600">→ متوسطة</td><td style="color:var(--warning);font-weight:600">→ متوسطة</td><td style="color:var(--warning)">→ متوسطة</td><td>نشرة تثقيفية + عرض خاص لتعزيز الرضا</td></tr>
+        <tr><td>تقييم 2 + نادرًا + أقل من شهر + مشكلات</td><td style="color:var(--danger);font-weight:600">↓ منخفضة جداً</td><td style="color:var(--danger);font-weight:600">↓ منخفضة جداً</td><td style="color:var(--danger)">↑ عالية جداً</td><td>تدخل فوري — اتصال مباشر + تعويض</td></tr>
+        <tr><td>تقييم 4 + شهري + 1-6 شهور + مشكلات</td><td style="color:var(--warning);font-weight:600">→ متأثرة بالمشكلة</td><td style="color:var(--warning);font-weight:600">→ متأثرة بالمشكلة</td><td style="color:var(--warning)">→ مخاطرة معتدلة</td><td>حل المشكلة أولاً ثم متابعة رضا</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- TAB: EXECUTIVE -->
+<div id="tab-executive" class="tab-panel">
+  <div class="chart-card-full reveal" style="border-right:4px solid #6366f1;margin-bottom:1.5rem">
+    <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px">📋 ملخص تنفيذي للمدير العام</div>
+    <div style="font-size:13px;color:var(--text-secondary);line-height:1.8">
+      استناداً إلى تحليل <strong>10,901 استجابة عميل</strong>، يُظهر المنتج أداءً تجارياً قوياً بمتوسط تقييم <strong>3.99/5</strong> ونسبة رضا <strong>74%</strong>. الفرص الكبرى تكمن في <strong>تحويل 29.9% من العملاء المحايدين</strong> إلى مؤيدين، وخفض معدل المشكلات من 19.9%، وسد فجوة الـ <strong>21%</strong> بين الرضا والتوصية. المنتج يمتلك مؤشر NPS مقدر بـ <strong>+49</strong> — مستوى ممتاز يعكس قاعدة ولاء صلبة تحتاج إلى رعاية واستثمار استراتيجي.
+    </div>
+  </div>
+
+  <div class="section-title reveal">أهم 20 رؤية تحليلية</div>
+  <div class="insight-grid">
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣</div><div class="insight-title">قاعدة ولاء 49.1%</div><div class="insight-text">5,351 عميل يشترون ويوصون — قاعدة مناصرة قوية يمكن تحويلها لأداة تسويق شفهي منظم</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">2️⃣</div><div class="insight-title">فجوة التوصية 21%</div><div class="insight-text">73.9% راضون لكن 52.9% فقط يوصون — الرضا لا يُترجم تلقائيًا، يحتاج تحفيزًا وبرنامج إحالة</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">3️⃣</div><div class="insight-title">المستخدمون اليوميون نخبة الرضا</div><div class="insight-text">تقييم 4.35 للاستخدام اليومي مقابل 3.13 للنادر — فجوة 1.22 تؤكد أن التوعية بالاستخدام المنتظم ترفع الرضا</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">4️⃣</div><div class="insight-title">المشكلات تخفض الرضا 14%</div><div class="insight-text">من 4.10 إلى 3.53 عند وجود مشكلة — كل 100 مشكلة محلولة تُرجَّح برفع تقييمات 100 عميل</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">5️⃣</div><div class="insight-title">الجنس لا يفرق في الرضا</div><div class="insight-text">ارتباط 0.004 غير دال — المنتج يخدم الجنسين بالتساوي، مما يُمكّن استراتيجية تسويق موحدة وأكثر كفاءة</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">6️⃣</div><div class="insight-title">العمر عامل هامشي</div><div class="insight-text">ارتباط −0.022 فقط — الانخفاض الطفيف عند كبار السن (3.87 للـ55+) لا يستدعي تخصيص منتج لكن يستدعي تحسين دعم</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">7️⃣</div><div class="insight-title">44.7% ممن واجهوا مشكلات لا يزالون يشترون</div><div class="insight-text">قوة المنتج الأساسية تتجاوز تجارب سلبية — حل المشكلات سيحول هؤلاء لمؤيدين متحمسين</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">8️⃣</div><div class="insight-title">الاسماعيلية الأعلى رضا (4.22)</div><div class="insight-text">مدن خارج المحاور الكبرى تُبدي رضا أعلى — فرصة توسع جغرافي بتكلفة اكتساب أقل في المحافظات</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">9️⃣</div><div class="insight-title">المنوفيه الأقل رضا (3.70)</div><div class="insight-text">تحتاج تدخلاً مخصصاً — قد يكون مشكلة توزيع أو سلسلة تبريد أو خدمة توصيل في تلك المنطقة</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">🔟</div><div class="insight-title">سهولة الاستخدام أهم ميزة (6,141)</div><div class="insight-text">يجب أن تظل ركيزة التطوير — أي تعقيد مستقبلي في التصميم سيكلف من الرصيد التنافسي الأقوى</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣1️⃣</div><div class="insight-title">38.6% مستخدمون جدد (أقل من شهر)</div><div class="insight-text">قاعدة عملاء جديدة قوية — برنامج onboarding ممنهج سيحول جزءاً من هذه الشريحة لعملاء منتظمين</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣2️⃣</div><div class="insight-title">20.1% مستخدمون قدامى (أكثر من سنة)</div><div class="insight-text">تقييمهم أعلى (4.06) — العملاء القدامى يمثلون أصلاً استراتيجياً لبرامج الإحالة والتوصية</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣3️⃣</div><div class="insight-title">Champions 22.3% من القاعدة</div><div class="insight-text">2,428 عميل يمثلون "صوت العلامة" — تنظيمهم في برنامج سفراء يعطي ROI عالياً مقارنة بالإعلانات المدفوعة</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣4️⃣</div><div class="insight-title">NPS مقدر +49</div><div class="insight-text">مستوى ممتاز (53% يوصون − 4.3% يحذرون = +48.7) — يضع العلامة في الربع العلوي لمعظم القطاعات</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣5️⃣</div><div class="insight-title">3,256 عميل محايد (29.9%)</div><div class="insight-text">أكبر فرصة غير مستغلة — تحويل 50% منهم فقط سيزيد قاعدة المؤيدين بـ 1,600 عميل</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣6️⃣</div><div class="insight-title">التوصية أقوى مؤشر للرضا (r=0.405)</div><div class="insight-text">قياس نية التوصية كمقياس لاكتشاف المشكلات قبل أن تتحول لشكاوى علنية</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣7️⃣</div><div class="insight-title">الاقتراح الأكثر: السعر (287)</div><div class="insight-text">تقليل السعر مطلب ضمن فجوة توقع لا منتج سيء — باقات اقتصادية أو برامج تقسيط ستستوعب هذه الشريحة</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣8️⃣</div><div class="insight-title">دقة نموذج انخفاض الرضا 95.7%</div><div class="insight-text">يمكن تطبيق نموذج تنبؤي لاكتشاف العملاء عالي الخطر استباقياً بدقة عالية جداً</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">1️⃣9️⃣</div><div class="insight-title">59.6% يستخدمون أسبوعياً</div><div class="insight-text">أغلبية الاستخدام في الوتيرة الأسبوعية — تحويل 20% منهم لاستخدام يومي سيرفع متوسط التقييم العام</div></div>
+    <div class="insight-card reveal"><div class="insight-icon">2️⃣0️⃣</div><div class="insight-title">483 عميل "At Risk + Dissatisfied"</div><div class="insight-text">يمكن إنقاذهم بتدخل مباشر — عودة 50% منهم تعادل 241 عميلاً يدر كل منهم قيمة عمرية كاملة</div></div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">10 رؤى خفية (Hidden Insights)</div>
+  <div class="insight-grid">
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">الأمانة الكامنة للمحايدين</div><div class="insight-text">3,256 "محايد" لم يشكوا لكن لم يُثنوا — هؤلاء ينتظرون سبباً واحداً إيجابياً أو سلبياً لاتخاذ موقف</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">مفارقة الموصي غير المشتري</div><div class="insight-text">341 عميل يوصون لكن لا ينوون الشراء مجدداً — ظاهرة نادرة تحتاج بحثاً: هل هو سعر؟ توافر؟ احتياج لمنتج مختلف؟</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">العميل الجديد المتحمس</div><div class="insight-text">38.6% مستخدمون جدد بتقييم 3.93 — أقل من المعدل، لكن إذا جاوز الـ4 بعد 6 شهور فالمنتج يُحسّن تجربته تلقائيًا</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">التنافر الجغرافي الخفي</div><div class="insight-text">نفس المدن تظهر بأسماء مختلفة (Cairo/القاهرة/القاهره) — ربما تعكس قنوات بيع مختلفة بتجارب متباينة</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">قوة التأثير غير المتناسبة للمشكلات</div><div class="insight-text">19.9% فقط يواجهون مشكلات لكنهم يمثلون ارتباطاً سلبياً −0.231 — تأثيرهم على المؤشرات أكبر من حجمهم</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">صمت الاقتراحات = رضا ضمني</div><div class="insight-text">معظم الاقتراحات فارغة أو "لا يوجد" — الصمت في الاستطلاعات ليس لامبالاة بل مؤشر رضا كافٍ</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">الارتباط المزدوج: توصية + شراء</div><div class="insight-text">من يوصي يشتري (r=0.405 و0.326) — الإجراءان متشابكان؛ رفع أحدهما يرفع الآخر تلقائياً</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">تأثير المدن الصغيرة: رضا أعلى</div><div class="insight-text">الاسماعيلية وكفر الشيخ وشبين الكوم > القاهرة في الرضا — إشارة لأن التوقعات أو المنافسة في المحافظات لصالح المنتج</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">العمر يُشير لاتجاه طفيف ذو دلالة</div><div class="insight-text">r=−0.022 صغير لكن دال إحصائياً — كبار السن (55+: 3.87) يحتاجون دعمًا مختلفاً دون الإضرار بالتجربة الشاملة</div>
+    </div>
+    <div class="insight-card reveal" style="border-top:2px solid #8b5cf6">
+      <div class="insight-icon">🔍</div><div class="insight-title">الولاء يسبق الرضا الكامل</div><div class="insight-text">49.1% وفيون رغم أن الرضا التام (5/5) يمثل 28.6% فقط — العملاء يتسامحون مع النقص إذا كانت القيمة الإجمالية كافية</div>
+    </div>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">10 فرص تجارية استراتيجية</div>
+  <div class="chart-card-full reveal">
+    <table class="rec-table">
+      <thead><tr><th>#</th><th>الفرصة</th><th>الحجم المستهدف</th><th>الأثر المتوقع</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>برنامج سفراء العلامة من Champions (2,428)</td><td>2,428 عميل</td><td>رفع NPS ونمو 15-20% بالإحالات</td></tr>
+        <tr><td>2</td><td>تحويل المحايدين (3,256) بحملة تفاعل مخصصة</td><td>3,256 عميل</td><td>رفع معدل التوصية من 53% إلى 65%+</td></tr>
+        <tr><td>3</td><td>استرداد "At Risk + Dissatisfied" (920 عميل)</td><td>920 عميل</td><td>تقليل churn وتحسين سمعة المنتج</td></tr>
+        <tr><td>4</td><td>حزمة اقتصادية للشريحة الحساسة سعريًا</td><td>287+ عميل محتمل</td><td>توسع شرائحي دون خفض قيمة العلامة</td></tr>
+        <tr><td>5</td><td>التوسع الجغرافي في المحافظات ذات الرضا العالي</td><td>مدن جديدة</td><td>اكتساب بتكلفة أقل ورضا أعلى من المتوسط</td></tr>
+        <tr><td>6</td><td>برنامج onboarding للمستخدمين الجدد (38.6%)</td><td>4,228 عميل</td><td>رفع تقييم المستخدمين الجدد من 3.93 لـ 4.1+</td></tr>
+        <tr><td>7</td><td>تحويل المستخدمين الأسبوعيين ليوميين (59.6%)</td><td>6,031 عميل</td><td>رفع المتوسط العام من 3.99 لـ 4.1+</td></tr>
+        <tr><td>8</td><td>تطوير تغليف بيئي مستدام</td><td>قاعدة واسعة</td><td>تمييز تنافسي وتحسين صورة العلامة</td></tr>
+        <tr><td>9</td><td>نشر نموذج التنبؤ لاكتشاف العملاء الخطرين (95.7% دقة)</td><td>تشغيلي</td><td>تدخل استباقي يخفض churn بتكلفة أقل</td></tr>
+        <tr><td>10</td><td>برامج خدمة ما بعد البيع في الإسكندرية والمنوفية</td><td>500+ عميل</td><td>رفع رضا منطقتين مهمتين بـ 0.3-0.5 نقطة</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title reveal" style="margin-top:1.5rem">10 مخاطر يجب مراقبتها</div>
+  <div class="chart-card-full reveal">
+    <table class="rec-table">
+      <thead><tr><th>#</th><th>الخطر</th><th>المؤشر</th><th>الإجراء الوقائي</th><th>المستوى</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>تحول Detractors لمراجعات سلبية علنية</td><td>83 عميل ساخط</td><td>تدخل فوري وشخصي خلال 48 ساعة</td><td><span class="badge badge-high">حرج</span></td></tr>
+        <tr><td>2</td><td>فقدان At Risk (450) للمنافسين</td><td>450 لا ينوون الشراء</td><td>استطلاع + عرض شخصي</td><td><span class="badge badge-high">عالي</span></td></tr>
+        <tr><td>3</td><td>تراكم مشكلات التوصيل في الإسكندرية</td><td>تقييم 3.64-3.91</td><td>مراجعة سلسلة التوزيع في المنطقة</td><td><span class="badge badge-high">عالي</span></td></tr>
+        <tr><td>4</td><td>فجوة التوصية تتسع مع المنافسة</td><td>21% فجوة حالية</td><td>إطلاق برنامج إحالة قبل دخول منافس</td><td><span class="badge badge-high">عالي</span></td></tr>
+        <tr><td>5</td><td>تدني رضا المستخدمين الجدد يؤثر سمعياً</td><td>تقييم 3.93 للجدد</td><td>تحسين onboarding والدعم الأول</td><td><span class="badge badge-med">متوسط</span></td></tr>
+        <tr><td>6</td><td>الحساسية السعرية تتحول لعزوف</td><td>287 اقتراح تخفيض سعر</td><td>مراجعة استراتيجية التسعير سنوياً</td><td><span class="badge badge-med">متوسط</span></td></tr>
+        <tr><td>7</td><td>تباين الجودة بين الدفعات</td><td>267 اقتراح تحسين جودة</td><td>نظام رقابة جودة صارم + audit دوري</td><td><span class="badge badge-med">متوسط</span></td></tr>
+        <tr><td>8</td><td>تراجع رضا كبار السن (55+ = 3.87)</td><td>انخفاض طفيف ذو دلالة</td><td>مراجعة تجربة المستخدم للفئات الكبيرة</td><td><span class="badge badge-low">منخفض</span></td></tr>
+        <tr><td>9</td><td>اشتراط العملاء تغليفاً بيئياً</td><td>اتجاه ناشئ</td><td>استباق المطلب قبل تحوله لشرط إلزامي</td><td><span class="badge badge-low">منخفض</span></td></tr>
+        <tr><td>10</td><td>التدهور التدريجي لشريحة Loyal→Neutral</td><td>35.5% Loyal حالياً</td><td>برامج engagement دورية واستطلاعات منتظمة</td><td><span class="badge badge-low">منخفض</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="charts-row" style="margin-top:1.5rem">
+    <div class="chart-card reveal">
+      <div class="chart-title">⚡ Quick Wins (30-90 يوم)</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">✅ <strong>تفعيل برنامج إحالة للـ Champions</strong> — عمولة أو هدية لكل إحالة ناجحة</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">✅ <strong>تواصل مباشر مع الـ 83 Detractor</strong> — رسالة شخصية خلال 48 ساعة</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">✅ <strong>إطلاق باقة اقتصادية خفيفة</strong> — لاستيعاب الحساسين سعريًا</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">✅ <strong>تطبيق نموذج التنبؤ</strong> — لاكتشاف العملاء الخطرين أسبوعياً</div>
+        <div style="padding:6px 0">✅ <strong>إنشاء قناة دعم واضحة</strong> — لتقليل معدل المشكلات المُرحَّلة</div>
+      </div>
+    </div>
+    <div class="chart-card reveal">
+      <div class="chart-title">🎯 التوصيات الاستراتيجية (6-18 شهر)</div>
+      <div style="margin-top:8px;font-size:12px;color:var(--text-secondary);line-height:1.8">
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">🎯 <strong>استراتيجية Customer Lifecycle</strong> — رحلة مُهندسة من Neutral → Champion</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">🎯 <strong>التوسع في محافظات الرضا العالي</strong> — الاسماعيلية وكفر الشيخ أولاً</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">🎯 <strong>إعادة هندسة تجربة الاستخدام الأول</strong> — رفع رضا الـ 38.6% الجدد</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border)">🎯 <strong>مبادرة الاستدامة</strong> — تغليف بيئي كعامل تمييز</div>
+        <div style="padding:6px 0">🎯 <strong>نظام رصد مستمر</strong> — لوحة BI ربع سنوية لقياس تحسن المؤشرات</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.getElementById('themeBtn').textContent = next === 'dark' ? '☀️' : '🌙';
+  updateChartTheme();
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  const prefers = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const theme = saved || prefers;
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeBtn').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+// ===== TABS =====
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    this.classList.add('active');
+    const panel = document.getElementById('tab-' + this.dataset.tab);
+    panel.classList.add('active');
+    // Animate reveal elements in the new tab
+    panel.querySelectorAll('.reveal').forEach((el, i) => {
+      el.classList.remove('visible');
+      setTimeout(() => el.classList.add('visible'), i * 60);
+    });
+  });
+});
+
+// ===== SCROLL REVEAL =====
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ===== COUNTER ANIMATION =====
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  if (!target) return;
+  const duration = 1200;
+  const start = performance.now();
+  function update(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.floor(eased * target).toLocaleString('ar-EG');
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+const counterObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      animateCounter(entry.target);
+      counterObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('.kpi-value[data-target]').forEach(el => counterObserver.observe(el));
+
+// ===== BAR ANIMATION =====
+function animateBars() {
+  document.querySelectorAll('.bar-fill').forEach(bar => {
+    const width = bar.getAttribute('data-width') || bar.style.width;
+    if (width && width !== '0%' && width !== '0') {
+      bar.dataset.width = width;
+      bar.style.width = '0%';
+    }
+  });
+  const barObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.width = entry.target.dataset.width || '100%';
+        barObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.bar-fill').forEach(el => barObserver.observe(el));
+}
+
+// ===== THEME-DEPENDENT CHART COLORS =====
+let charts = [];
+
+function getThemeColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    text: isDark ? 'rgba(220,230,255,0.85)' : 'rgba(0,0,0,0.5)',
+    grid: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(0,0,0,0.06)',
+  };
+}
+
+function baseOpts() {
+  const { text, grid } = getThemeColors();
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 1200, easing: 'easeOutElastic' },
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { ticks: { color: text }, grid: { color: grid } },
+      y: { ticks: { color: text }, grid: { color: grid } }
+    }
+  };
+}
+
+function initCharts() {
+  const { text, grid } = getThemeColors();
+
+  function opts(extra) {
+    return { ...baseOpts(), ...extra };
+  }
+
+  // helper: brighter colors in dark mode
+  const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+  const c = (light, dark) => isDark() ? dark : light;
+
+  const barBase = {
+    borderRadius: 8,
+    borderSkipped: false,
+    borderColor: 'transparent',
+    borderWidth: 1,
+    hoverBorderWidth: 2,
+    hoverBorderColor: 'rgba(255,255,255,0.4)',
+  };
+
+  charts.push(new Chart(document.getElementById('ratingChart'), {
+    type: 'bar',
+    data: {
+      labels: ['1⭐','2⭐','3⭐','4⭐','5⭐'],
+      datasets: [{
+        ...barBase,
+        data: [214, 222, 2146, 4305, 3113],
+        backgroundColor: [
+          c('#ef4444','#ff6b6b'),
+          c('#f59e0b','#fbbf24'),
+          c('#94a3b8','#c8d6e5'),
+          c('#6366f1','#818cf8'),
+          c('#10b981','#34d399')
+        ],
+      }]
+    },
+    options: opts({
+      animation: { duration: 1400, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 120 },
+      scales: { x: { ticks: { color: text }, grid: { display: false } }, y: { ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('repurchaseChart'), {
+    type: 'doughnut',
+    data: { labels: ['نعم','غير متأكد','لا'], datasets: [{ data: [7047, 2390, 684], backgroundColor: [c('#10b981','#34d399'), c('#f59e0b','#fbbf24'), c('#ef4444','#ff6b6b')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.15)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '62%', animation: { animateRotate: true, duration: 1500, easing: 'easeOutElastic' } }
+  }));
+
+  charts.push(new Chart(document.getElementById('recommendChart'), {
+    type: 'doughnut',
+    data: { labels: ['بالتأكيد','ربما','لا'], datasets: [{ data: [5350, 4401, 370], backgroundColor: [c('#6366f1','#818cf8'), c('#f59e0b','#fbbf24'), c('#ef4444','#ff6b6b')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.15)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '62%', animation: { animateRotate: true, duration: 1500, easing: 'easeOutElastic' } }
+  }));
+
+  charts.push(new Chart(document.getElementById('genderChart'), {
+    type: 'doughnut',
+    data: { labels: ['رجل','سيدة'], datasets: [{ data: [5267, 4854], backgroundColor: [c('#6366f1','#818cf8'), c('#f43f5e','#fb7185')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.15)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '58%', animation: { animateRotate: true, duration: 1200, easing: 'easeOutElastic' } }
+  }));
+
+  charts.push(new Chart(document.getElementById('ageChart'), {
+    type: 'bar',
+    data: { labels: ['18-25','26-35','36-45','46-55','55+'], datasets: [{ ...barBase, data: [4.00, 3.98, 3.99, 3.94, 3.87], backgroundColor: c('#8b5cf6','#a78bfa'), borderColor: c('transparent','rgba(167,139,250,0.3)') }] },
+    options: opts({
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 80 },
+      scales: { x: { ticks: { color: text }, grid: { display: false } }, y: { min: 3.7, max: 4.1, ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('cityChart'), {
+    type: 'bar',
+    data: { labels: ['القاهرة','الجيزة','الاسكندرية','المنصورة','الفيوم','اسيوط','طنطا','المنيا','الزقازيق'], datasets: [
+      { ...barBase, label: 'المشاركون', data: [3219,1037,444,174,160,155,155,134,128], backgroundColor: c('#B5D4F4','rgba(129,140,248,0.5)'), yAxisID: 'y1' },
+      { ...barBase, label: 'متوسط التقييم', data: [4.00,4.05,3.91,4.07,4.02,3.91,4.05,4.10,3.86], backgroundColor: c('#10b981','#34d399'), yAxisID: 'y2' }
+    ]},
+    options: {
+      ...baseOpts(),
+      animation: { duration: 1200, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 60 },
+      scales: { x: { ticks: { color: text, font: { size: 11 } }, grid: { display: false } }, y1: { position: 'right', ticks: { color: text }, grid: { color: grid }, title: { display: true, text: 'مشاركون', color: text, font: { size: 11 } } }, y2: { position: 'left', min: 3.5, max: 4.3, ticks: { color: text }, grid: { display: false }, title: { display: true, text: 'تقييم', color: text, font: { size: 11 } } } }
+    }
+  }));
+
+  charts.push(new Chart(document.getElementById('freqChart'), {
+    type: 'doughnut',
+    data: { labels: ['أسبوعيًا','شهريًا','يوميًا','نادرًا'], datasets: [{ data: [6031,2373,2224,729], backgroundColor: [c('#6366f1','#818cf8'), c('#10b981','#34d399'), c('#8b5cf6','#a78bfa'), c('#94a3b8','#c8d6e5')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.12)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '58%', animation: { animateRotate: true, duration: 1400, easing: 'easeOutElastic' } }
+  }));
+
+  charts.push(new Chart(document.getElementById('durationChart'), {
+    type: 'doughnut',
+    data: { labels: ['1-6 شهور','أقل من شهر','أكثر من سنة'], datasets: [{ data: [5522,3902,2030], backgroundColor: [c('#f59e0b','#fbbf24'), c('#ef4444','#ff6b6b'), c('#10b981','#34d399')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.12)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '58%', animation: { animateRotate: true, duration: 1200, easing: 'easeOutElastic' } }
+  }));
+
+  charts.push(new Chart(document.getElementById('usageRatingChart'), {
+    type: 'bar',
+    data: { labels: ['يومي','أسبوعي','شهري','نادرًا','> سنة','1-6 شهور','< شهر'], datasets: [{ ...barBase, label: 'متوسط التقييم', data: [4.35, 4.01, 3.85, 3.13, 4.06, 4.00, 3.93], backgroundColor: [c('#10b981','#34d399'), c('#6366f1','#818cf8'), c('#f59e0b','#fbbf24'), c('#ef4444','#ff6b6b'), c('#8b5cf6','#a78bfa'), c('#f43f5e','#fb7185'), c('#94a3b8','#c8d6e5')] }] },
+    options: opts({
+      animation: { duration: 1200, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 80 },
+      scales: { x: { ticks: { color: text }, grid: { display: false } }, y: { min: 2.8, max: 4.6, ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  // CORRELATIONS
+  charts.push(new Chart(document.getElementById('corrBarChart'), {
+    type: 'bar',
+    data: { labels: ['التوصية','إعادة الشراء','تكرار الاستخدام','المشكلات','مدة الاستخدام','العمر','الجنس'], datasets: [{ ...barBase, label: 'معامل الارتباط', data: [0.405, 0.326, 0.266, -0.231, 0.042, -0.022, 0.004], backgroundColor: [c('#10b981','#34d399'), c('#10b981','#34d399'), c('#10b981','#34d399'), c('#ef4444','#ff6b6b'), c('#94a3b8','#c8d6e5'), c('#94a3b8','#c8d6e5'), c('#94a3b8','#c8d6e5')] }] },
+    options: opts({
+      indexAxis: 'y',
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 100 },
+      scales: { x: { min: -0.3, max: 0.5, ticks: { color: text }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 10 } }, grid: { display: false } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('problemRatingChart'), {
+    type: 'bar',
+    data: { labels: ['لا توجد مشكلة', 'توجد مشكلة'], datasets: [{ ...barBase, data: [4.10, 3.53], backgroundColor: [c('#10b981','#34d399'), c('#ef4444','#ff6b6b')] }] },
+    options: opts({
+      animation: { duration: 800, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 200 },
+      scales: { x: { ticks: { color: text }, grid: { display: false } }, y: { min: 3.2, max: 4.4, ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('cityRatingCorr'), {
+    type: 'bar',
+    data: { labels: ['الاسماعيلية','كفر الشيخ','المنيا','شبين الكوم','المنصورة','طنطا','الجيزة','الفيوم','القاهرة','اسيوط','الاسكندرية','المنوفيه'], datasets: [{ ...barBase, data: [4.22,4.10,4.10,4.08,4.07,4.05,4.05,4.02,4.00,3.91,3.91,3.70], backgroundColor: [c('#10b981','#34d399'), c('#10b981','#34d399'), c('#10b981','#34d399'), c('#10b981','#34d399'), c('#10b981','#34d399'), c('#6366f1','#818cf8'), c('#6366f1','#818cf8'), c('#6366f1','#818cf8'), c('#f59e0b','#fbbf24'), c('#f59e0b','#fbbf24'), c('#ef4444','#ff6b6b'), c('#ef4444','#ff6b6b')] }] },
+    options: opts({
+      animation: { duration: 1200, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 60 },
+      scales: { x: { ticks: { color: text, font: { size: 9 } }, grid: { display: false } }, y: { min: 3.5, max: 4.4, ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  // SEGMENTS
+  charts.push(new Chart(document.getElementById('segmentPieChart'), {
+    type: 'doughnut',
+    data: { labels: ['Loyal','Neutral','Champions','Dissatisfied','At Risk','Promoters','Detractors'], datasets: [{ data: [3873, 3256, 2428, 470, 450, 341, 83], backgroundColor: [c('#10b981','#34d399'), c('#94a3b8','#c8d6e5'), c('#6366f1','#818cf8'), c('#ef4444','#ff6b6b'), c('#f59e0b','#fbbf24'), c('#8b5cf6','#a78bfa'), c('#f43f5e','#fb7185')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.12)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), cutout: '52%', animation: { animateRotate: true, duration: 1600, easing: 'easeOutElastic' }, plugins: { legend: { display: true, position: 'bottom', labels: { color: getThemeColors().text, font: { size: 10 }, boxWidth: 10, padding: 8 } } } }
+  }));
+
+  // TEXT ANALYSIS
+  charts.push(new Chart(document.getElementById('likedFeaturesChart'), {
+    type: 'polarArea',
+    data: { labels: ['سهولة الاستخدام','السعر','التصميم','التغليف','الحجم'], datasets: [{ data: [6141, 5399, 2841, 2069, 1957], backgroundColor: [c('rgba(99,102,241,0.7)','rgba(129,140,248,0.6)'), c('rgba(16,185,129,0.7)','rgba(52,211,153,0.6)'), c('rgba(139,92,246,0.7)','rgba(167,139,250,0.6)'), c('rgba(245,158,11,0.7)','rgba(251,191,36,0.6)'), c('rgba(244,63,94,0.7)','rgba(251,113,133,0.6)')], borderWidth: 2, borderColor: c('transparent','rgba(255,255,255,0.15)'), hoverBorderWidth: 3, hoverBorderColor: 'rgba(255,255,255,0.5)' }] },
+    options: { ...baseOpts(), animation: { duration: 1400, easing: 'easeOutElastic' }, plugins: { legend: { display: true, position: 'bottom', labels: { color: getThemeColors().text, font: { size: 10 }, boxWidth: 10, padding: 6 } } }, scales: { r: { ticks: { display: false }, grid: { color: getThemeColors().grid } } } }
+  }));
+
+  charts.push(new Chart(document.getElementById('suggCategoriesChart'), {
+    type: 'bar',
+    data: { labels: ['تقليل السعر','جودة المنتج','تغليف أفضل','توصيل أسرع','خدمة ما بعد البيع'], datasets: [{ ...barBase, data: [287, 267, 145, 85, 62], backgroundColor: [c('#ef4444','#ff6b6b'), c('#f59e0b','#fbbf24'), c('#6366f1','#818cf8'), c('#8b5cf6','#a78bfa'), c('#10b981','#34d399')] }] },
+    options: opts({
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 100 },
+      scales: { x: { ticks: { color: text, font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: text }, grid: { color: grid } } }
+    })
+  }));
+
+  // PREDICTIONS
+  charts.push(new Chart(document.getElementById('predRepurchaseChart'), {
+    type: 'bar',
+    data: { labels: ['التقييم (+0.64)','مدة الاستخدام (+0.28)','تكرار الاستخدام (+0.23)','المشكلات (−1.07)'], datasets: [{ ...barBase, data: [0.64, 0.28, 0.23, -1.07], backgroundColor: [c('#10b981','#34d399'), c('#8b5cf6','#a78bfa'), c('#6366f1','#818cf8'), c('#ef4444','#ff6b6b')] }] },
+    options: opts({
+      indexAxis: 'y',
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 120 },
+      scales: { x: { min: -1.5, max: 1, ticks: { color: text }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 10 } }, grid: { display: false } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('predRecommendChart'), {
+    type: 'bar',
+    data: { labels: ['التقييم (+0.83)','تكرار الاستخدام (+0.18)','مدة الاستخدام (+0.16)','المشكلات (−0.25)'], datasets: [{ ...barBase, data: [0.83, 0.18, 0.16, -0.25], backgroundColor: [c('#10b981','#34d399'), c('#6366f1','#818cf8'), c('#8b5cf6','#a78bfa'), c('#ef4444','#ff6b6b')] }] },
+    options: opts({
+      indexAxis: 'y',
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 120 },
+      scales: { x: { min: -0.5, max: 1, ticks: { color: text }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 10 } }, grid: { display: false } } }
+    })
+  }));
+
+  charts.push(new Chart(document.getElementById('predLowSatChart'), {
+    type: 'bar',
+    data: { labels: ['تكرار نادر (−0.86)','مدة قصيرة (−0.40)','وجود مشكلة (+1.43)'], datasets: [{ ...barBase, data: [-0.86, -0.40, 1.43], backgroundColor: [c('#f59e0b','#fbbf24'), c('#6366f1','#818cf8'), c('#ef4444','#ff6b6b')] }] },
+    options: opts({
+      indexAxis: 'y',
+      animation: { duration: 1000, easing: 'easeOutElastic', delay: (ctx) => ctx.dataIndex * 150 },
+      scales: { x: { min: -1.5, max: 2, ticks: { color: text }, grid: { color: grid } }, y: { ticks: { color: text, font: { size: 10 } }, grid: { display: false } } }
+    })
+  }));
+}
+
+function updateChartTheme() {
+  charts.forEach(chart => {
+    const colors = getThemeColors();
+    if (chart.options.scales?.x?.ticks) chart.options.scales.x.ticks.color = colors.text;
+    if (chart.options.scales?.y?.ticks) chart.options.scales.y.ticks.color = colors.text;
+    if (chart.options.scales?.x?.grid) chart.options.scales.x.grid.color = colors.grid;
+    if (chart.options.scales?.y?.grid) chart.options.scales.y.grid.color = colors.grid;
+    if (chart.options.scales?.r?.grid) chart.options.scales.r.grid.color = colors.grid;
+    if (chart.options.plugins?.legend?.labels) chart.options.plugins.legend.labels.color = colors.text;
+    chart.update('none');
+  });
+}
+
+// ===== INIT =====
+initTheme();
+initCharts();
+animateBars();
+
+// Manually trigger first tab animations after charts load
+setTimeout(() => {
+  document.querySelectorAll('#tab-overview .reveal').forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), i * 100 + 300);
+  });
+}, 500);
+</script>
+</body>
+</html>
